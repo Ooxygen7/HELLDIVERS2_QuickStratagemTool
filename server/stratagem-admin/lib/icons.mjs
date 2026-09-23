@@ -36,7 +36,7 @@ export async function normalizeUploadedIcon(upload) {
   }
   const png = await image
     .rotate()
-    .resize(208, 208, {
+    .resize(256, 256, {
       fit: "contain",
       withoutEnlargement: false,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
@@ -44,7 +44,8 @@ export async function normalizeUploadedIcon(upload) {
     .png({ compressionLevel: 9, adaptiveFiltering: true, palette: true })
     .toBuffer();
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" data-hd2-normalized-icon="1"><path fill="#011419" fill-opacity=".75" d="M0 0h256v256H0z"/><image x="24" y="24" width="208" height="208" preserveAspectRatio="xMidYMid meet" href="data:image/png;base64,${png.toString("base64")}"/><path fill="#5abeda" fill-rule="evenodd" d="M0 0h256v256H0zM14 14v228h228V14H14z"/></svg>`;
+  // Preserve the uploaded artwork: never add a frame, backplate, or inset.
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" data-hd2-normalized-icon="1"><image x="0" y="0" width="256" height="256" href="data:image/png;base64,${png.toString("base64")}"/></svg>`;
   const bytes = Buffer.from(svg, "utf8");
   if (bytes.length > LIMITS.normalizedIconBytes) throw new TypeError("normalized icon exceeds the size limit");
   return {
