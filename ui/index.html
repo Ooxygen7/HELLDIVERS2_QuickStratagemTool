@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HD2 Trigger</title>
+    <title>HD2 Macro Terminal</title>
     <style>
         :root {
             --hd-yellow: #FFE80A;
@@ -66,33 +66,34 @@
             height: 40px; background: rgba(0,0,0,0.4); 
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             display: flex; justify-content: space-between; align-items: center; 
-            padding-left: 20px; -webkit-app-region: drag; 
+            padding-left: 12px; -webkit-app-region: drag;
             border-bottom: 1px solid var(--glass-border); z-index: 100; flex-shrink: 0;
         }
         .title-text { 
             color: var(--hd-text-primary); font-size: 13px; font-weight: 600; letter-spacing: 1px;
             text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            min-width: 0; margin-right: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .titlebar-controls { display: flex; height: 100%; -webkit-app-region: no-drag; align-items: center; padding-right: 5px; gap: 4px; }
+        .titlebar-controls { display: flex; flex-shrink: 0; height: 100%; -webkit-app-region: no-drag; align-items: center; padding-right: 4px; gap: 2px; }
         
         .lang-btn {
             background: var(--glass-panel); border: 1px solid var(--glass-border); color: var(--hd-text-primary);
-            cursor: pointer; padding: 4px 12px; font-size: 11px; font-weight: bold; border-radius: 12px;
-            transition: var(--transition); margin-right: 10px;
+            cursor: pointer; padding: 4px 8px; font-size: 11px; font-weight: bold; border-radius: 12px;
+            transition: var(--transition); margin-right: 2px; white-space: nowrap;
         }
         .lang-btn:hover { background: var(--hd-yellow-alpha); border-color: var(--hd-yellow); color: var(--hd-yellow); }
         
         .window-btn {
-            width: 32px; height: 32px; background: transparent; border: none; border-radius: 8px;
+            width: 28px; height: 32px; background: transparent; border: none; border-radius: 8px;
             color: var(--hd-text-secondary); cursor: pointer; transition: var(--transition); font-size: 12px;
             display: flex; justify-content: center; align-items: center;
         }
         .window-btn:hover { background-color: rgba(255,255,255,0.1); color: var(--hd-text-primary); }
         .window-btn.close:hover { background-color: var(--hd-red); color: white; }
 
-        #app-content { flex-grow: 1; display: flex; flex-direction: column; padding: 24px; gap: 24px; overflow-y: auto; }
+        #app-content { flex-grow: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px; gap: 12px; overflow-y: auto; }
 
-        .top-controls { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+        .top-controls { display: flex; flex-shrink: 0; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
         .btn-square {
             background-color: var(--glass-panel); color: var(--hd-text-primary); 
             border: 1px solid var(--glass-border); border-radius: var(--radius-md);
@@ -100,7 +101,7 @@
             transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2); backdrop-filter: blur(10px);
         }
-        .top-controls .btn-square { flex-grow: 1; }
+        .top-controls .btn-square { flex-grow: 1; padding: 8px 10px; }
         .btn-square:hover { background-color: var(--glass-panel-hover); border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
         .btn-square:active { transform: translateY(1px); }
         
@@ -110,12 +111,12 @@
         }
         .btn-square.primary:hover { background-color: var(--hd-yellow-hover); box-shadow: 0 0 20px rgba(255, 232, 10, 0.4); }
 
-        .list-container { display: flex; flex-direction: column; gap: 12px; flex-grow: 1; }
+        .list-container { display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
         
         .list-row {
             display: flex; align-items: stretch; background-color: var(--glass-panel);
             border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
-            height: 76px; transition: var(--transition); position: relative; overflow: hidden;
+            height: 50px; flex-shrink: 0; transition: var(--transition); position: relative; overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2); cursor: default;
         }
         .list-row:hover { border-color: rgba(255,255,255,0.2); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
@@ -131,7 +132,7 @@
 
         /* 拖拽手柄 */
         .drag-handle {
-            width: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            width: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
             border-right: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); transition: var(--transition);
             cursor: grab; touch-action: none; -webkit-user-drag: element;
         }
@@ -143,29 +144,30 @@
         .list-row:hover .drag-handle::after { color: var(--hd-yellow); }
         
         .empty-click-area {
-            flex-grow: 1; display: flex; justify-content: center; align-items: center;
-            color: var(--hd-text-secondary); font-size: 14px; font-weight: 600; cursor: pointer; transition: var(--transition);
+            flex: 1; min-width: 0; display: flex; justify-content: center; align-items: center;
+            color: var(--hd-text-secondary); font-size: 12px; font-weight: 600; cursor: pointer; transition: var(--transition);
+            text-align: center; padding: 0 6px;
             /* 去除左侧圆角以贴合手柄 */
             border-radius: 0;
         }
         .empty-click-area:hover { background-color: var(--hd-yellow-alpha); color: var(--hd-yellow); }
 
         .row-icon-box {
-            width: 76px; height: 100%; background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent); 
-            border-right: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; padding: 12px; position: relative;
+            width: 60px; height: 100%; flex-shrink: 0; background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
+            border-right: 1px solid var(--glass-border); display: flex; justify-content: center; align-items: center; padding: 6px; position: relative;
         }
         .row-icon-box img { max-width: 100%; max-height: 100%; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
         
         .btn-remove {
-            position: absolute; top: 6px; left: 6px; background: var(--glass-panel); color: var(--hd-text-secondary);
-            border: 1px solid var(--glass-border); border-radius: 50%; width: 22px; height: 22px; font-size: 10px;
+            position: absolute; top: 4px; left: 4px; background: var(--glass-panel); color: var(--hd-text-secondary);
+            border: 1px solid var(--glass-border); border-radius: 50%; width: 18px; height: 18px; font-size: 10px;
             display: flex; justify-content: center; align-items: center; cursor: pointer; opacity: 0; transition: var(--transition);
         }
         .list-row:hover .btn-remove { opacity: 1; }
         .btn-remove:hover { background: var(--hd-red); color: white; border-color: var(--hd-red); transform: scale(1.1); }
         .btn-lock {
-            position: absolute; top: 6px; right: 6px; background: var(--glass-panel); color: var(--hd-text-secondary);
-            border: 1px solid var(--glass-border); border-radius: 50%; width: 22px; height: 22px; padding: 0;
+            position: absolute; top: 4px; right: 4px; background: var(--glass-panel); color: var(--hd-text-secondary);
+            border: 1px solid var(--glass-border); border-radius: 50%; width: 18px; height: 18px; padding: 0;
             display: flex; justify-content: center; align-items: center; cursor: pointer; opacity: 0; transition: var(--transition);
         }
         .btn-lock svg { width: 12px; height: 12px; pointer-events: none; }
@@ -174,20 +176,21 @@
         .btn-lock:hover { background: var(--hd-yellow-alpha); color: var(--hd-yellow); border-color: var(--hd-yellow); transform: scale(1.1); }
         .btn-lock.locked:hover { background: rgba(255, 69, 58, 0.18); color: var(--hd-red); border-color: var(--hd-red); }
 
-        .row-arrows { flex-grow: 1; display: flex; justify-content: flex-start; align-items: center; gap: 10px; padding: 0 24px; }
-        .arrow-img { width: 24px; height: 24px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8)); transition: transform 0.2s;}
+        .row-arrows { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; overflow-x: auto; }
+        .arrow-img { flex: 0 0 17px; width: 17px; height: 17px; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.8)); transition: transform 0.2s;}
         .list-row:hover .arrow-img { transform: scale(1.05); }
 
-        .row-bind-box { width: 200px; border-left: 1px solid var(--glass-border); padding: 10px; display: flex; }
+        .row-bind-box { width: clamp(108px, 26vw, 154px); flex-shrink: 0; border-left: 1px solid var(--glass-border); padding: 4px; display: flex; }
         .bind-btn {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
-            color: var(--hd-text-secondary); font-size: 13px; font-weight: bold; cursor: pointer; transition: var(--transition); 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; z-index: 10;
+            width: 100%; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            color: var(--hd-text-secondary); font-size: 12px; font-weight: bold; cursor: pointer; transition: var(--transition);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px; z-index: 10;
         }
         .bind-btn:hover { background: rgba(255,255,255,0.05); color: var(--hd-text-primary); border-color: rgba(255,255,255,0.2); }
-        .bind-btn.bound { background: var(--hd-yellow-alpha); border-color: var(--hd-yellow); color: var(--hd-yellow); font-size: 16px; }
+        .bind-btn.bound { background: var(--hd-yellow-alpha); border-color: var(--hd-yellow); color: var(--hd-yellow); font-size: 14px; }
         .bind-btn.listening { background: var(--hd-yellow); color: var(--hd-black); border-color: var(--hd-yellow); animation: pulse 1.5s infinite; }
         .bind-subtext { font-size: 10px; color: var(--hd-text-secondary); font-weight: 500; letter-spacing: 0; }
+        .bind-key, .bind-subtext { max-width: 100%; padding: 0 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .bind-btn.bound:hover .bind-subtext { color: var(--hd-red); }
 
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 232, 10, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(255, 232, 10, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 232, 10, 0); } }
@@ -202,7 +205,7 @@
         .modal-overlay.active { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
         
         .modal-header {
-            padding: 20px 24px; border-bottom: 1px solid var(--glass-border); display: flex;
+            padding: 12px 14px; border-bottom: 1px solid var(--glass-border); display: flex; flex-shrink: 0; gap: 8px;
             justify-content: space-between; align-items: center; background: rgba(10,10,12,0.8);
         }
         .modal-title { font-size: 20px; font-weight: 800; color: var(--hd-text-primary); letter-spacing: 1px; display: flex; align-items: center; gap: 10px;}
@@ -210,7 +213,7 @@
         .modal-header .btn-square { flex-grow: 0; padding: 8px 24px; font-size: 13px; border-radius: 20px; } 
 
         #library-modal .modal-header { gap: 16px; flex-wrap: wrap; flex-shrink: 0; }
-        .lib-heading { flex: 1; min-width: 260px; }
+        .lib-heading { flex: 1; min-width: 180px; }
         .lib-favorite-hint { margin-top: 8px; color: var(--hd-text-secondary); font-size: 12px; line-height: 1.5; }
         .lib-search-container { padding: 20px 24px 0 24px; }
         #lib-search-input {
@@ -251,12 +254,12 @@
         #free-notice-first-error { padding: 0 24px; }
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        .settings-content { padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; max-width: 800px; margin: 0 auto; width: 100%;}
-        .set-group { background: var(--glass-panel); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 20px 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+        .settings-content { padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-width: 800px; margin: 0 auto; width: 100%;}
+        .set-group { background: var(--glass-panel); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
         .set-title { color: var(--hd-yellow); font-size: 14px; font-weight: bold; margin-bottom: 20px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
-        .set-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .set-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .set-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .set-label { font-size: 14px; color: var(--hd-text-primary); font-weight: 500; display:flex; flex-direction: column; gap: 6px; }
+        .set-label { font-size: 14px; color: var(--hd-text-primary); font-weight: 500; display:flex; flex: 1 1 140px; min-width: 0; flex-direction: column; gap: 6px; }
         .set-desc { font-size: 11px; color: var(--hd-text-secondary); line-height: 1.4; font-weight: 400; max-width: 85%; }
         
         .set-btn {
@@ -267,7 +270,7 @@
         .set-btn.listening { background: var(--hd-yellow); color: var(--hd-black); border-color: var(--hd-yellow); animation: pulse 1.5s infinite; }
 
         .toggle-box { display: flex; background: rgba(0,0,0,0.5); border-radius: var(--radius-sm); padding: 4px; border: 1px solid var(--glass-border); }
-        .toggle-option { padding: 6px 20px; cursor: pointer; color: var(--hd-text-secondary); font-size: 12px; font-weight: 600; border-radius: 6px; transition: var(--transition); text-align: center;}
+        .toggle-option { padding: 6px 12px; cursor: pointer; color: var(--hd-text-secondary); font-size: 12px; font-weight: 600; border-radius: 6px; transition: var(--transition); text-align: center;}
         .toggle-option.active { background: var(--glass-panel-hover); color: var(--hd-text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); }
 
         .set-input {
@@ -286,11 +289,12 @@
             background: var(--hd-yellow); margin-top: -5px; box-shadow: 0 0 10px rgba(0,0,0,0.5); cursor: pointer; transition: transform 0.1s;
         }
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .set-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--hd-yellow); cursor: pointer; }
 
-        .presets-content { padding: 24px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto; max-width: 900px; margin: 0 auto; width: 100%;}
+        .presets-content { padding: 12px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-width: 900px; margin: 0 auto; width: 100%;}
         .preset-save-bar { display: flex; gap: 12px; background: var(--glass-panel); padding: 16px; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         #preset-name-input {
-            flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+            flex-grow: 1; min-width: 0; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
             color: var(--hd-text-primary); padding: 0 16px; font-size: 14px; outline: none; transition: var(--transition);
         }
         #preset-name-input:focus { border-color: var(--hd-yellow); box-shadow: 0 0 0 3px var(--hd-yellow-alpha); }
@@ -317,14 +321,15 @@
             padding: 12px 24px; font-size: 14px; font-weight: bold; border-radius: 30px; z-index: 999;
             opacity: 0; visibility: hidden; transition: opacity 0.3s ease, transform 0.3s ease, visibility 0s linear 0.3s; pointer-events: none;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
-            text-align: center; white-space: nowrap;
+            text-align: center; max-width: calc(100% - 24px); width: max-content; overflow-wrap: anywhere;
         }
         #global-status.show { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition-delay: 0s; }
         #global-status.error { background: rgba(255, 69, 58, 0.9); color: white; }
 
         .confirm-box {
             width: 380px; background: var(--glass-panel-hover); border: 1px solid var(--glass-border);
-            border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow: hidden;
+            border-radius: var(--radius-xl); display: flex; flex-direction: column; overflow-y: auto;
+            max-width: calc(100% - 24px); max-height: calc(100% - 24px);
             box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05) inset;
             backdrop-filter: blur(20px); margin: auto;
         }
@@ -443,6 +448,13 @@
                         <div class="toggle-option active" id="style-text" onclick="setOverlayStyle('text')">TEXT (文本)</div>
                         <div class="toggle-option" id="style-svg" onclick="setOverlayStyle('svg')">ICON (键帽)</div>
                     </div>
+                </div>
+                <div class="set-row">
+                    <label class="set-label" for="input-hide-overlay-hotkeys">
+                        <span id="txt-hide-overlay-hotkeys">隐藏快捷键</span>
+                        <span class="set-desc" id="txt-desc-hide-overlay-hotkeys">悬浮窗仅显示战备图标。</span>
+                    </label>
+                    <input type="checkbox" id="input-hide-overlay-hotkeys" onchange="gameSettings.hideOverlayHotkeys = this.checked">
                 </div>
                 <div class="set-row">
                     <div class="set-label">
@@ -839,7 +851,7 @@
             zh: {
                 // UI
                 btnOverlay: "悬浮窗", setOverlayTitle: "悬浮窗外观", setOverlayLabel: "如果悬浮窗已锁定，点击此处恢复可拖拽状态。",
-                btnUnlock: "解锁", appTitle: "绝地潜兵2 战备触发器", btnSettings: "游戏设置", btnPresets: "预设管理", btnSponsor: "赞助", btnOpenLib: "打开战备库",
+                btnUnlock: "解锁", appTitle: "绝地潜兵2 战备触发器 · 紧凑版", btnSettings: "游戏设置", btnPresets: "预设管理", btnSponsor: "赞助", btnOpenLib: "打开战备库",
                 emptySlot: "空置槽位 (点击前往战备库添加)", clickToBind: "点击绑定", waiting: "等待输入...",
                 unboundSub: "未绑定触发键", bindSub: "按下组合键，回车确认 (ESC取消)", boundSub: "右键点击清除绑定",
                 libTitle: "战备配置档案库", btnDone: "完成", dragHint: "按住拖动排序 (不改变键位)",
@@ -875,6 +887,7 @@
                 
                 // 悬浮窗
                 ovOpacity: "透明度", ovSize: "宽高尺寸", ovStyle: "按键样式", ovText: "文本", ovIcon: "图标",
+                hideOverlayHotkeys: "隐藏快捷键", descHideOverlayHotkeys: "悬浮窗仅显示战备图标。",
                 autoOpenOverlay: "启动时自动开启悬浮窗", autoOpenOverlayOn: "开启", autoOpenOverlayOff: "关闭",
                 autoLockOverlay: "悬浮窗呼出时自动锁定", autoLockOverlayOn: "开启", autoLockOverlayOff: "关闭",
                 ovCtrlTitle: "悬浮窗控制", ovCtrlUp: "向上选择", ovCtrlDown: "向下选择", ovCtrlExec: "执行选定战备",
@@ -908,6 +921,7 @@
                 ocrHelp: "帮助",
                 ocrTitle: "OCR 自动识别", ocrRegion: "识别区域", ocrSelectRegion: "框选识别区域", ocrDisplay: "识别屏幕", ocrPrimaryDisplay: "主屏幕", ocrHotkey: "识别快捷键", toastEnabled: "提示气泡", toastOn: "开启", toastOff: "关闭", ocrRegionUnset: "未设置", ocrRegionSet: "已设置: {width} x {height} @ {x},{y}",
                 descOcrRegion: "在屏幕叠加层上拖动鼠标框选游戏左上角战备栏文字区域，保存后 OCR 只识别此区域。", descOcrDisplay: "选择游戏所在的显示器，框选窗口只会出现在这块屏幕上。", descOcrHotkey: "按下该快捷键后自动识别区域内文字，并和中英文战备库名称比对后装备识别结果。", descToastEnabled: "在玩家屏幕底部稍微靠上的位置显示提示气泡。",
+                msgOcrMissionSkipped: "，另有 {count} 个黄色战备因槽位不足未装配",
                 msgOcrSelectStarted: "请在屏幕上拖动框选 OCR 识别区域", msgOcrRegionSaved: "OCR 识别区域已保存", msgOcrNoRegion: "请先在设置中框选 OCR 识别区域", msgOcrRunning: "OCR 识别中...", msgOcrNoText: "OCR 未识别到文字", msgOcrNoMatch: "未匹配到战备", msgOcrLoaded: "已成功装备 {count} 个战备", msgOcrNoSpace: "剩余战备空位不足", msgOcrFailed: "OCR 识别失败: {error}", msgMacroFailed: "按键发送失败: {error}", msgOverlayFailed: "悬浮窗操作失败: {error}", msgUnlockFailed: "悬浮窗解锁失败: {error}", announcementOk: "我知道了"
             },
             en: {
@@ -949,6 +963,7 @@
                 
                 // 悬浮窗
                 ovOpacity: "OPACITY", ovSize: "SIZE (W x H)", ovStyle: "HOTKEY STYLE", ovText: "TEXT", ovIcon: "ICON",
+                hideOverlayHotkeys: "HIDE HOTKEYS", descHideOverlayHotkeys: "Show only stratagem icons in the overlay.",
                 autoOpenOverlay: "AUTO-OPEN OVERLAY ON STARTUP", autoOpenOverlayOn: "ON", autoOpenOverlayOff: "OFF",
                 autoLockOverlay: "AUTO-LOCK OVERLAY WHEN SHOWN", autoLockOverlayOn: "ON", autoLockOverlayOff: "OFF",
                 ovCtrlTitle: "OVERLAY CONTROLS", ovCtrlUp: "SCROLL UP", ovCtrlDown: "SCROLL DOWN", ovCtrlExec: "EXECUTE SELECTION",
@@ -982,6 +997,7 @@
                 ocrHelp: "Help",
                 ocrTitle: "OCR AUTO LOADOUT", ocrRegion: "OCR REGION", ocrSelectRegion: "SELECT REGION", ocrDisplay: "OCR SCREEN", ocrPrimaryDisplay: "PRIMARY SCREEN", ocrHotkey: "OCR HOTKEY", toastEnabled: "TOAST NOTIFICATIONS", toastOn: "ON", toastOff: "OFF", ocrRegionUnset: "NOT SET", ocrRegionSet: "SET: {width} x {height} @ {x},{y}",
                 descOcrRegion: "Drag a rectangle over the in-game stratagem text area. OCR will only read this saved region until you replace it.", descOcrDisplay: "Select the monitor where the game is running. The region selector will only appear on that screen.", descOcrHotkey: "Press this hotkey to recognize the selected region and equip stratagems matched against the English and Chinese library names.", descToastEnabled: "Show notification bubbles slightly above the bottom of the player screen.",
+                msgOcrMissionSkipped: ". Skipped {count} yellow stratagem(s) because the slots are full.",
                 msgOcrSelectStarted: "Drag on screen to select the OCR region", msgOcrRegionSaved: "OCR region saved", msgOcrNoRegion: "Select an OCR region in settings first", msgOcrRunning: "OCR recognizing...", msgOcrNoText: "OCR did not read any text", msgOcrNoMatch: "No stratagems matched", msgOcrLoaded: "Successfully equipped {count} stratagems", msgOcrNoSpace: "Not enough remaining stratagem slots", msgOcrFailed: "OCR failed: {error}", msgMacroFailed: "Input failed: {error}", msgOverlayFailed: "Overlay operation failed: {error}", msgUnlockFailed: "Could not unlock overlay: {error}", announcementOk: "Got it"
             }
         };
@@ -1128,6 +1144,7 @@
             menuKey: 'ControlLeft', menuMode: 'hold', directionOnly: false, upKey: 'KeyW', downKey: 'KeyS', leftKey: 'KeyA', rightKey: 'KeyD',
             menuOpenDelay: 100, pressDelay: 10, intervalDelay: 10, 
             ovOpacity: 100, ovWidth: 300, ovHeight: 550, ovStyle: 'text',
+            hideOverlayHotkeys: false,
             autoOpenOverlay: false, autoLockOverlay: false,
             ovUp: 'WheelUp', ovDown: 'WheelDown', ovExec: 'MouseMiddle',
             ocrHotkey: 'F8', ocrRegion: null, ocrRegionCoordinateSpace: null, ocrDisplayId: null, showToasts: true,
@@ -1759,7 +1776,7 @@
                     gameSettings.directionOnly = normalizedDirectionOnly;
                     settingsChanged = true;
                 }
-                for (const key of ['autoOpenOverlay', 'autoLockOverlay']) {
+                for (const key of ['autoOpenOverlay', 'autoLockOverlay', 'hideOverlayHotkeys']) {
                     const normalized = gameSettings[key] === true;
                     if (normalized !== gameSettings[key]) {
                         gameSettings[key] = normalized;
@@ -1848,7 +1865,7 @@
             await syncGlobalInputFilter();
 
             if(window.electronAPI && window.electronAPI.updateOverlaySettings) {
-                window.electronAPI.updateOverlaySettings({ opacity: gameSettings.ovOpacity, style: gameSettings.ovStyle });
+                window.electronAPI.updateOverlaySettings(getOverlayAppearance());
             }
             
             updateI18n();
@@ -1864,6 +1881,14 @@
             }
         }
 
+        function getOverlayAppearance() {
+            return {
+                opacity: gameSettings.ovOpacity,
+                style: gameSettings.ovStyle,
+                hideHotkeys: gameSettings.hideOverlayHotkeys === true
+            };
+        }
+
         window.handleToggleOverlay = async () => {
             if (!window.electronAPI) return;
             try {
@@ -1871,7 +1896,7 @@
                 await syncGlobalInputFilter();
                 if (isOverlayVisible) {
                     await window.electronAPI.resizeOverlay(gameSettings.ovWidth, gameSettings.ovHeight);
-                    await window.electronAPI.updateOverlaySettings({ opacity: gameSettings.ovOpacity, style: gameSettings.ovStyle });
+                    await window.electronAPI.updateOverlaySettings(getOverlayAppearance());
                     await window.electronAPI.updateOverlay(activeLoadout);
                     await window.electronAPI.updateSelection(overlaySelectedIndex);
                     if (gameSettings.autoLockOverlay === true) {
@@ -1994,6 +2019,8 @@
             document.getElementById('txt-set-style').textContent = lang.ovStyle;
             document.getElementById('style-text').textContent = lang.ovText;
             document.getElementById('style-svg').textContent = lang.ovIcon;
+            document.getElementById('txt-hide-overlay-hotkeys').textContent = lang.hideOverlayHotkeys;
+            document.getElementById('txt-desc-hide-overlay-hotkeys').textContent = lang.descHideOverlayHotkeys;
             document.getElementById('txt-set-autoOpenOverlay').textContent = lang.autoOpenOverlay;
             document.getElementById('auto-open-overlay-on').textContent = lang.autoOpenOverlayOn;
             document.getElementById('auto-open-overlay-off').textContent = lang.autoOpenOverlayOff;
@@ -2109,6 +2136,7 @@
         };
 
         function formatSingleDisplayKey(key) {
+            if (key === 'NumpadDecimal') return '.';
             return key.replace(/Key|Digit|Numpad/g, '')
                       .replace('ControlLeft', 'LCtrl')
                       .replace('ControlRight', 'RCtrl')
@@ -2153,12 +2181,12 @@
                 if (bindingTarget && bindingTarget.type === 'macro' && bindingTarget.index === i) {
                     const pendingChord = normalizeHotkeyChord(bindingTarget.chordKeys || []);
                     btnClass += ' listening';
-                    btnText = pendingChord ? `[ ${formatDisplayKey(pendingChord)} ]` : lang.waiting;
+                    btnText = pendingChord ? formatDisplayKey(pendingChord) : lang.waiting;
                     subText = lang.bindSub;
                 } else if (slot.hotkey) {
-                    btnClass += ' bound'; btnText = `[ ${formatDisplayKey(slot.hotkey)} ]`; subText = lang.boundSub;
+                    btnClass += ' bound'; btnText = formatDisplayKey(slot.hotkey); subText = lang.boundSub;
                 }
-                const bindBoxHtml = `<div class="row-bind-box"><button class="${escapeHtml(btnClass)}" onclick="startMacroBind(${i}, event)" oncontextmenu="clearMacroBind(${i}, event)">${escapeHtml(btnText)}<div class="bind-subtext">${escapeHtml(subText)}</div></button></div>`;
+                const bindBoxHtml = `<div class="row-bind-box"><button class="${escapeHtml(btnClass)}" title="${escapeHtml(btnText)}" onclick="startMacroBind(${i}, event)" oncontextmenu="clearMacroBind(${i}, event)"><span class="bind-key">${escapeHtml(btnText)}</span><span class="bind-subtext">${escapeHtml(subText)}</span></button></div>`;
                 const dragLabel = escapeHtml(lang.dragHint || '');
                 const dragHandleHtml = `<div class="drag-handle" title="${dragLabel}" aria-label="${dragLabel}" role="button"></div>`;
 
@@ -2554,6 +2582,7 @@
             
             document.getElementById('style-text').className = `toggle-option ${gameSettings.ovStyle === 'text' ? 'active' : ''}`;
             document.getElementById('style-svg').className = `toggle-option ${gameSettings.ovStyle === 'svg' ? 'active' : ''}`;
+            document.getElementById('input-hide-overlay-hotkeys').checked = gameSettings.hideOverlayHotkeys === true;
             const autoOpenOverlay = gameSettings.autoOpenOverlay === true;
             document.getElementById('auto-open-overlay-on').className = `toggle-option ${autoOpenOverlay ? 'active' : ''}`;
             document.getElementById('auto-open-overlay-off').className = `toggle-option ${autoOpenOverlay ? '' : 'active'}`;
@@ -2696,7 +2725,7 @@
             
             if(window.electronAPI && window.electronAPI.resizeOverlay) {
                 window.electronAPI.resizeOverlay(gameSettings.ovWidth, gameSettings.ovHeight);
-                window.electronAPI.updateOverlaySettings({ opacity: gameSettings.ovOpacity, style: gameSettings.ovStyle });
+                window.electronAPI.updateOverlaySettings(getOverlayAppearance());
             }
             if (previousSlotCount !== maxSlots) {
                 commitLoadoutChange();
@@ -2901,7 +2930,14 @@
         }
 
         function getStratagemMatchTerms(strat) {
-            const terms = Array.isArray(strat.ocr) ? strat.ocr : [];
+            const terms = Array.isArray(strat.ocr) ? [...strat.ocr] : [];
+            if (strat.name && typeof strat.id === 'string' && !strat.id.startsWith('custom_')) {
+                const { zh, en } = strat.name;
+                terms.push(zh, en);
+                // The game can omit equipment model numbers and the call-in prefix.
+                if (typeof en === 'string') terms.push(en.replace(/^[a-z][a-z0-9/-]*-\d+[a-z]?\s+/i, ''));
+                if (strat.grp === 'mission' && typeof zh === 'string') terms.push(zh.replace(/^呼叫/, ''));
+            }
             return [...new Set(terms.map(t => String(t || '').trim()).filter(t => t.length >= 2))];
         }
 
@@ -2917,7 +2953,7 @@
 
         function rebuildOcrCache() {
             const candidates = stratagemDB
-                .filter(strat => strat.enabled !== false && strat.grp !== 'mission')
+                .filter(strat => strat.enabled !== false)
                 .flatMap(strat => getStratagemMatchTerms(strat).map(term => ({
                     strat,
                     term,
@@ -3018,18 +3054,17 @@
                     return b.score - a.score;
                 })
                 .filter((match, index, all) => all.findIndex(item => item.strat.id === match.strat.id) === index)
-                .slice(0, maxSlots)
                 .map(match => match.strat);
         }
 
         function applyOcrLoadout(matches) {
             const lockedIds = new Set(activeLoadout.filter(item => item.locked && item.strat).map(item => item.strat.id));
-            const equipTargets = matches.filter(strat => !lockedIds.has(strat.id));
+            const equipTargets = matches.filter(strat => strat.grp !== 'mission').slice(0, maxSlots)
+                .filter(strat => !lockedIds.has(strat.id));
             const availableIndexes = [];
 
             for (let i = 0; i < maxSlots; i++) {
                 if (activeLoadout[i].locked) continue;
-                activeLoadout[i].strat = null;
                 availableIndexes.push(i);
             }
 
@@ -3037,12 +3072,17 @@
                 return { ok: false, reason: 'no-space', count: 0 };
             }
 
-            equipTargets.forEach((strat, index) => {
-                activeLoadout[availableIndexes[index]].strat = strat;
+            // Keep regular stratagems on the same slot bindings they had before mission OCR.
+            const missionTargets = matches.filter(strat => strat.grp === 'mission' && !lockedIds.has(strat.id));
+            const missionSlots = availableIndexes.length - equipTargets.length;
+            equipTargets.push(...missionTargets.slice(0, missionSlots));
+
+            availableIndexes.forEach((slotIndex, index) => {
+                activeLoadout[slotIndex].strat = equipTargets[index] || null;
             });
             overlaySelectedIndex = 0;
             commitLoadoutChange();
-            return { ok: true, count: equipTargets.length };
+            return { ok: true, count: equipTargets.length, skippedMissionCount: Math.max(0, missionTargets.length - missionSlots) };
         }
 
         let isMacroRunning = false; 
@@ -3122,7 +3162,11 @@
                     showToast(lang.msgOcrNoSpace, true);
                     return;
                 }
-                showToast(lang.msgOcrLoaded.replace('{count}', equipResult.count));
+                let message = lang.msgOcrLoaded.replace('{count}', equipResult.count);
+                if (equipResult.skippedMissionCount > 0) {
+                    message += lang.msgOcrMissionSkipped.replace('{count}', equipResult.skippedMissionCount);
+                }
+                showToast(message);
             } catch (e) {
                 showToast(lang.msgOcrFailed.replace('{error}', e.message || String(e)), true);
             } finally {

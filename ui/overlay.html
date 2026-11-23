@@ -77,10 +77,13 @@
         .icon { width: 40px; height: 40px; object-fit: contain; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; background: rgba(0,0,0,0.8); padding: 2px; }
         
 
-        .hotkey-text { font-size: 20px; text-shadow: 2px 2px 0px #000; -webkit-text-stroke: 1px black; }
+        body:not(.keycap-style) .hotkey {
+            font-size: 20px; text-shadow: 2px 2px 0px #000; -webkit-text-stroke: 1px black;
+        }
+        body:not(.keycap-style) .hotkey:not(.single-dot)::before { content: '[ '; white-space: pre; }
+        body:not(.keycap-style) .hotkey:not(.single-dot)::after { content: ' ]'; white-space: pre; }
 
-
-        .hotkey-icon {
+        body.keycap-style .hotkey {
             display: inline-flex; justify-content: center; align-items: center;
             background: linear-gradient(180deg, #e6e6e6 0%, #a3a3a3 100%);
             border: 1px solid #333; border-radius: 6px;
@@ -90,6 +93,10 @@
             transform: translateY(-2px);
             min-width: 32px;
         }
+
+        body.hotkeys-hidden .hotkey { display: none; }
+        body.hotkeys-hidden .stratagem-item { width: fit-content; gap: 0; padding: 4px; }
+        body.hotkeys-hidden #drag-bar { width: fit-content; gap: 12px; }
 
         body.locked #drag-bar { display: none; }
         body.locked .stratagem-item { border-color: transparent; }
@@ -123,7 +130,6 @@
 
     <script src="./bridge.js"></script>
     <script>
-        let currentStyle = 'text';
         let selectedOverlayItem = null;
         const EMPTY_IMAGE_SOURCE = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
@@ -148,13 +154,14 @@
         function applyOverlaySettings(settings) {
             if (!settings || typeof settings !== 'object') return;
             document.body.style.opacity = settings.opacity / 100;
-            currentStyle = settings.style;
+            document.body.classList.toggle('keycap-style', settings.style === 'svg');
+            document.body.classList.toggle('hotkeys-hidden', settings.hideHotkeys === true);
         }
         window.electronAPI.onOverlaySettings(applyOverlaySettings);
 
         function formatKeyName(key) {
             if(typeof key !== 'string' || !key) return '';
-            return key.split('+').map(part => part.replace(/Key|Digit|Numpad/g, '')
+            return key.split('+').map(part => part === 'NumpadDecimal' ? '.' : part.replace(/Key|Digit|Numpad/g, '')
                           .replace('ControlLeft', 'LCtrl')
                           .replace('ControlRight', 'RCtrl')
                           .replace('ShiftLeft', 'LShift')
@@ -188,9 +195,9 @@
                 div.appendChild(image);
                 if(item.hotkey) {
                     const hotkey = document.createElement('div');
-                    hotkey.className = currentStyle === 'svg' ? 'hotkey-icon' : 'hotkey-text';
                     const displayName = formatKeyName(item.hotkey);
-                    hotkey.textContent = currentStyle === 'svg' ? displayName : `[ ${displayName} ]`;
+                    hotkey.className = displayName === '.' ? 'hotkey single-dot' : 'hotkey';
+                    hotkey.textContent = displayName;
                     div.appendChild(hotkey);
                 }
                 container.appendChild(div);

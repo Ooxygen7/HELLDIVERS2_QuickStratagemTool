@@ -81,12 +81,16 @@ const tauriConfig = JSON.parse(
 );
 const installerHooks = tauriConfig.bundle?.windows?.nsis?.installerHooks;
 assert.equal(installerHooks, "windows/installer-hooks.nsh");
-assert.equal(tauriConfig.version, "2.0.7", "the bundled version must match the application version");
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, "package.json"), "utf8"));
 const packageLock = JSON.parse(fs.readFileSync(path.join(root, "package-lock.json"), "utf8"));
-assert.equal(packageJson.version, "2.0.7");
-assert.equal(packageLock.version, "2.0.7");
-assert.equal(packageLock.packages[""].version, "2.0.7");
+assert.equal(tauriConfig.version, packageJson.version, "the bundled version must match the application version");
+assert.equal(packageLock.version, packageJson.version);
+assert.equal(packageLock.packages[""].version, packageJson.version);
+const mainWindow = tauriConfig.app.windows.find(window => window.label === "main");
+assert.deepEqual(
+  [mainWindow.width, mainWindow.height, mainWindow.minWidth, mainWindow.minHeight],
+  [540, 670, 420, 420],
+);
 const installerHookSource = fs.readFileSync(path.join(root, "src-tauri", installerHooks), "utf8");
 assert.match(installerHookSource, /CheckIfAppIsRunning "HD2 Macro Terminal\.exe"/);
 assert.match(installerHookSource, /CheckIfAppIsRunning "HD2-Trigger\.exe"/);
@@ -452,11 +456,27 @@ assert.match(indexSource, /strat\.enabled !== false/);
 assert.match(catalogSource, /Catalog signature verification failed/);
 assert.match(catalogSource, /BUNDLED_CATALOG_VERSION:\s*u64\s*=\s*1/);
 
-const overlayToggleStart = indexSource.indexOf("window.handleToggleOverlay = async");
+assert.match(indexSource, /hideOverlayHotkeys:\s*false/);
+assert.match(overlaySource, /body\.hotkeys-hidden \.hotkey\s*\{\s*display:\s*none/);
+
+const mainKeyFormatter = indexSource.slice(
+  indexSource.indexOf("function formatSingleDisplayKey("),
+  indexSource.indexOf("function formatDisplayKey("),
+);
+assert.equal(vm.runInNewContext(mainKeyFormatter + "formatSingleDisplayKey('NumpadDecimal')"), ".");
+const overlayKeyFormatter = overlaySource.slice(
+  overlaySource.indexOf("function formatKeyName("),
+  overlaySource.indexOf("function renderOverlay("),
+);
+assert.equal(vm.runInNewContext(overlayKeyFormatter + "formatKeyName('NumpadDecimal')"), ".");
+assert.equal(vm.runInNewContext(overlayKeyFormatter + "formatKeyName('ControlLeft+NumpadDecimal')"), "LCtrl + .");
+
+const overlayToggleStart = indexSource.indexOf("function getOverlayAppearance()");
 const overlayToggleEnd = indexSource.indexOf("window.unlockOverlaySafely", overlayToggleStart);
 assert.notEqual(overlayToggleStart, -1, "could not find overlay toggle handler");
 assert.notEqual(overlayToggleEnd, -1, "could not find overlay toggle handler end marker");
 const overlayCalls = [];
+const overlaySettings = [];
 const overlayToasts = [];
 const overlayContext = vm.createContext({
   console: { ...console, error() {} },
@@ -464,7 +484,10 @@ const overlayContext = vm.createContext({
     electronAPI: {
       async toggleOverlay() { overlayCalls.push("toggle"); return true; },
       async resizeOverlay() { overlayCalls.push("resize"); },
-      async updateOverlaySettings() { overlayCalls.push("settings"); },
+      async updateOverlaySettings(settings) {
+        overlayCalls.push("settings");
+        overlaySettings.push({ ...settings });
+      },
       async updateOverlay() { overlayCalls.push("data"); },
       async updateSelection() { overlayCalls.push("selection"); },
       async lockOverlay() { overlayCalls.push("lock"); },
@@ -499,10 +522,14 @@ vm.runInContext(
 );
 await overlayContext.overlayHarness.toggle();
 assert.deepEqual(overlayCalls, ["toggle", "filter", "resize", "settings", "data", "selection"]);
+assert.deepEqual(overlaySettings.at(-1), { opacity: 100, style: "text", hideHotkeys: false });
 overlayCalls.length = 0;
 overlayContext.overlayHarness.settings.autoLockOverlay = true;
+overlayContext.overlayHarness.settings.hideOverlayHotkeys = true;
+overlayContext.overlayHarness.settings.ovStyle = "svg";
 await overlayContext.overlayHarness.toggle();
 assert.deepEqual(overlayCalls, ["toggle", "filter", "resize", "settings", "data", "selection", "lock"]);
+assert.deepEqual(overlaySettings.at(-1), { opacity: 100, style: "svg", hideHotkeys: true });
 overlayCalls.length = 0;
 overlayContext.window.electronAPI.lockOverlay = async () => { throw new Error("simulated lock failure"); };
 await overlayContext.overlayHarness.toggle();
