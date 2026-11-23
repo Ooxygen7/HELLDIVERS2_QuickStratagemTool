@@ -118,7 +118,48 @@ function evaluate(context, expression) {
   );
 }
 
-// Intentional legacy rule 3: clear unlocked slots before returning no-space.
+// Mission entries can reuse their Chinese and English names from the catalog.
+{
+  const catalog = JSON.parse(fs.readFileSync(path.join(root, "server", "stratagem-admin", "data", "seed-catalog.json"), "utf8"));
+  const context = matcherContext({ stratagems: catalog.items });
+  const idsFor = text => JSON.parse(evaluate(context, `JSON.stringify(matchOcrStratagems(${JSON.stringify(text)}).map(item => item.id))`));
+  const missionItems = catalog.items.filter(item => item.grp === "mission");
+  assert.ok(missionItems.length > 0);
+  for (const mission of missionItems) {
+    assert.deepEqual(idsFor(mission.name.zh), [mission.id]);
+    assert.deepEqual(idsFor(mission.name.en), [mission.id]);
+  }
+  assert.deepEqual(idsFor("地狱火炸弹"), ["mis_hellbomb"]);
+  assert.deepEqual(idsFor("Portable Hellbomb"), ["pack_portable_hb"]);
+  assert.deepEqual(idsFor("便携式地狱火炸弹"), ["pack_portable_hb"]);
+}
+
+// Yellow entries fill the slots remaining after regular stratagems. Locks,
+// existing hotkeys, and regular stratagem order survive a mixed OCR result.
+{
+  const context = matcherContext({
+    stratagems: [],
+    maxSlots: 3,
+    loadout: [
+      { locked: false, strat: null, hotkey: "NumpadDecimal" },
+      { locked: true, strat: { id: "locked" }, hotkey: "Numpad1" },
+      { locked: false, strat: null, hotkey: "Numpad2" },
+    ],
+  });
+  const result = JSON.parse(evaluate(context, `JSON.stringify(applyOcrLoadout([
+    { id: 'yellow-a', grp: 'mission' },
+    { id: 'locked', grp: 'mission' },
+    { id: 'regular', grp: 'orbital' },
+    { id: 'yellow-b', grp: 'mission' },
+  ]))`));
+  assert.deepEqual(result, { ok: true, count: 2, skippedMissionCount: 1 });
+  assert.deepEqual(
+    JSON.parse(evaluate(context, "JSON.stringify(activeLoadout.map(({ strat, hotkey }) => [strat.id, hotkey]))")),
+    [["regular", "NumpadDecimal"], ["locked", "Numpad1"], ["yellow-a", "Numpad2"]],
+  );
+}
+
+// An OCR result that does not fit must keep the previous loadout intact.
 {
   const context = matcherContext({
     stratagems: [],
@@ -135,8 +176,9 @@ function evaluate(context, expression) {
     ),
   );
   assert.deepEqual(result, { ok: false, reason: "no-space", count: 0 });
-  assert.equal(evaluate(context, "activeLoadout[0].strat"), null);
+  assert.equal(evaluate(context, "activeLoadout[0].strat.id"), "old-unlocked");
   assert.equal(evaluate(context, "activeLoadout[1].strat.id"), "locked");
+  assert.equal(evaluate(context, "committed"), false);
 }
 
-console.log("OCR matcher legacy-regression tests passed.");
+console.log("OCR matcher and loadout regression tests passed.");
